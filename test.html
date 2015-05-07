@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+    <meta charset="UTF-8">
+    <title></title>
+    <link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.css" />
+    <script src="http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.js"></script>
+    <script src="./js/eve.js"></script>
+    <script src="./js/data.js"></script>
+    <style>
+        #map {
+            width:1200px;
+            height:800px;
+        }
+    </style>
+</head>
+<body>
+<div id="map"></div>
+
+<script>
+    // create a map in the "map" div, set the view to a given place and zoom
+    var map = L.map('map').setView([43.600344,1.43194], 13);
+
+    // add an OpenStreetMap tile layer
+    L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
+    }).addTo(map);
+
+
+    var markerSize = 40;
+    var marker = L.icon({
+        iconUrl: './images/icons/Map-Marker-Ball-Azure-icon.png',
+        iconSize: [markerSize, markerSize],
+        iconAnchor: [0.5*markerSize,markerSize]
+    });
+
+    var options = {
+        pointToLayer: function (feature, latlng) {
+            var icon = feature.properties.icon;
+            var iconObj;
+            if (icon && icon != 'null') {
+                iconObj =  L.icon({iconUrl:'./images/icons/' + feature.properties.icon, iconSize:[50,50]});
+            }
+            else {
+                iconObj =  marker;
+            }
+            return L.marker(latlng, {icon: iconObj});
+        }
+    }
+
+
+    var poiGeoData = L.geoJson(undefined,options).addTo(map);
+    var geoJsonTrackData = L.geoJson(undefined,options).addTo(map);
+
+    poiGeoData.clearLayers(); // inherited from LayerGroup
+    geoJsonTrackData.clearLayers();
+
+    poiGeoData.addData(poi);
+    geoJsonTrackData.addData(geoJSONTrack);
+
+
+
+</script>
+</body>
+</html>
