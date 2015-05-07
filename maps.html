@@ -3,10 +3,32 @@
 <head lang="en">
     <meta charset="UTF-8">
     <title></title>
-    <link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.css" />
+
+    <!--setup parameters-->
+    <script language="JavaScript">
+        var EVE_ADDRESS = 'http://openid.almende.org:8882/agents/proxy/';
+        var USE_FAKE_DATA = true;
+    </script>
+
+
+    <!--load the libraries-->
     <script src="http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.js"></script>
     <script src="./js/eve.js"></script>
+
+    <!--load the agents-->
+    <script src="./js/agents/proxy.js"></script>
+
+    <!--load the init script-->
+    <script src="./js/init.js"></script>
+
+    <!--load fake data-->
     <script src="./js/data.js"></script>
+
+    <!--load the css-->
+    <link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.css" />
+    <link rel="stylesheet" href="./css/global.css" />
+
+
     <style>
         #map {
             width:1200px;
@@ -52,13 +74,13 @@
     var poiGeoData = L.geoJson(undefined,options).addTo(map);
     var geoJsonTrackData = L.geoJson(undefined,options).addTo(map);
 
-    poiGeoData.clearLayers(); // inherited from LayerGroup
+    poiGeoData.clearLayers();
     geoJsonTrackData.clearLayers();
 
-    poiGeoData.addData(poi);
-    geoJsonTrackData.addData(geoJSONTrack);
-
-
+    if (USE_FAKE_DATA === true) {
+        poiGeoData.addData(poi);
+        geoJsonTrackData.addData(geoJSONTrack);
+    }
 
 </script>
 </body>
