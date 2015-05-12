@@ -7,7 +7,13 @@
     <!--setup parameters-->
     <script language="JavaScript">
         var EVE_ADDRESS = 'http://52.28.91.207:8882/agents/proxy/';
-        var USE_FAKE_DATA = true;
+
+        var CLOUD_GEOJSON = 'http://52.28.91.207:8882/rs/geojson';
+        var CLOUD_POI = 'http://52.28.91.207:8882/rs/poi';
+        var LOCAL_GEOJSON = 'http://localhost:8882/rs/geojson';
+        var LOCAL_POI = 'http://localhost:8882/rs/poi';
+
+        var MODE;
     </script>
 
 
@@ -25,63 +31,27 @@
     <script src="./js/data.js"></script>
 
     <!--load the css-->
-    <link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.css" />
-    <link rel="stylesheet" href="./css/global.css" />
-
+    <link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.css"/>
+    <link rel="stylesheet" href="./css/global.css"/>
 
     <style>
         #map {
-            width:1200px;
-            height:800px;
+            width: 1200px;
+            height: 800px;
         }
     </style>
 </head>
 <body>
+<input type="button" value="Cloud" onclick="setSource('Cloud')">
+<input type="button" value="Local" onclick="setSource('Local')">
+<span id="usingSpan"></span>
+
 <div id="map"></div>
 
 <script>
-    // create a map in the "map" div, set the view to a given place and zoom
-    var map = L.map('map').setView([43.600344,1.43194], 13);
+    drawMap();
 
-    // add an OpenStreetMap tile layer
-    L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {
-        attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors'
-    }).addTo(map);
-
-
-    var markerSize = 40;
-    var marker = L.icon({
-        iconUrl: './images/icons/Map-Marker-Ball-Azure-icon.png',
-        iconSize: [markerSize, markerSize],
-        iconAnchor: [0.5*markerSize,markerSize]
-    });
-
-    var options = {
-        pointToLayer: function (feature, latlng) {
-            var icon = feature.properties.icon;
-            var iconObj;
-            if (icon && icon != 'null') {
-                iconObj =  L.icon({iconUrl:'./images/icons/' + feature.properties.icon, iconSize:[50,50]});
-            }
-            else {
-                iconObj =  marker;
-            }
-            return L.marker(latlng, {icon: iconObj});
-        }
-    }
-
-
-    var poiGeoData = L.geoJson(undefined,options).addTo(map);
-    var geoJsonTrackData = L.geoJson(undefined,options).addTo(map);
-
-    poiGeoData.clearLayers();
-    geoJsonTrackData.clearLayers();
-
-    if (USE_FAKE_DATA === true) {
-        poiGeoData.addData(poi);
-        geoJsonTrackData.addData(geoJSONTrack);
-    }
-
+    setInterval(getDataGEO,1000);
 </script>
 </body>
 </html>
