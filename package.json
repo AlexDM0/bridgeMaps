@@ -2,6 +2,8 @@
   "name": "application-name",
   "version": "0.0.1",
   "dependencies": {
-    "evejs": "^0.4.6-test"
+    "evejs": "^0.4.6-test",
+    "leaflet": "^0.7.3",
+    "leaflet-label": "^0.2.1-0"
   }
 }

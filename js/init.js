@@ -15,9 +15,6 @@ var poiGeoData;
 var geoJsonTrackData;
 
 function drawMap() {
-  // default setting:
-  setSource('Local')
-
   // create a map in the "map" div, set the view to a given place and zoom
   var map = L.map('map').setView([43.600344, 1.43194], 13);
 
@@ -31,7 +28,8 @@ function drawMap() {
   var marker = L.icon({
     iconUrl: './images/icons/Map-Marker-Ball-Azure-icon.png',
     iconSize: [markerSize, markerSize],
-    iconAnchor: [0.5 * markerSize, markerSize]
+    iconAnchor: [0.5 * markerSize, markerSize],
+    popupAnchor: [0,-0.5*markerSize]
   });
 
   var options = {
@@ -45,6 +43,15 @@ function drawMap() {
         iconObj = marker;
       }
       return L.marker(latlng, {icon: iconObj});
+    },
+    onEachFeature: function(feature,layer) {
+      if (feature.properties && feature.properties.type === 'currentLocation') {
+        var label = feature.id;
+        if (feature.properties.minutesRemaining !== undefined) {
+          label += " <br>ETA: " + feature.properties.minutesRemaining + ' mins'
+        }
+        layer.bindLabel(label,{noHide:true}).showLabel();
+      }
     }
   }
 
@@ -52,8 +59,7 @@ function drawMap() {
   poiGeoData = L.geoJson(undefined, options).addTo(map);
   geoJsonTrackData = L.geoJson(undefined, options).addTo(map);
 
-  getDataPOI();
-  getDataGEO();
+  setSource(DEFAULT_INITIAL_MODE);
 }
 
 function getDataPOI() {
@@ -68,6 +74,7 @@ function getDataPOI() {
 }
 
 function getDataGEO() {
+  console.trace("here")
   var geojsonURL;
   if (MODE === 'Local') {
     geojsonURL = LOCAL_GEOJSON;

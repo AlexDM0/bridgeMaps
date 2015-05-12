@@ -14,11 +14,13 @@
         var LOCAL_POI = 'http://localhost:8882/rs/poi';
 
         var MODE;
+        var DEFAULT_INITIAL_MODE = "Local";
     </script>
 
 
     <!--load the libraries-->
-    <script src="http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.js"></script>
+    <script src="./js/libs/leaflet.js"></script>
+    <script src="./js/libs/leaflet.label.js"></script>
     <script src="./js/eve.js"></script>
 
     <!--load the agents-->
@@ -31,7 +33,8 @@
     <script src="./js/data.js"></script>
 
     <!--load the css-->
-    <link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.css"/>
+    <link rel="stylesheet" href="./css/leaflet.css"/>
+    <link rel="stylesheet" href="./css/leaflet.label.css"/>
     <link rel="stylesheet" href="./css/global.css"/>
 
     <style>
