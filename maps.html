@@ -6,16 +6,20 @@
 
     <!--setup parameters-->
     <script language="JavaScript">
+        var CLOUD_GEOJSON_TRACK_TEMPLATE = 'http://52.28.91.207:8882/rs/geojson/$$ID$$?includeTrack=true';
         var CLOUD_GEOJSON = 'http://52.28.91.207:8882/rs/geojson?includeTarget=false';
         var CLOUD_POI = 'http://52.28.91.207:8882/rs/poi';
+        var LOCAL_GEOJSON_TRACK_TEMPLATE = 'http://localhost:8882/rs/geojson/$$ID$$?includeTrack=true';
         var LOCAL_GEOJSON = 'http://localhost:8882/rs/geojson';
         var LOCAL_POI = 'http://localhost:8882/rs/poi';
 
-        var POI_INTERVAL = 5000;
+        var POI_INTERVAL = 8000;
         var GEO_INTERVAL = 1000;
 
         var MODE;
-        var DEFAULT_INITIAL_MODE = "Local";
+        var DEFAULT_INITIAL_MODE = "Cloud";
+
+        var ICON_SIZE = 40; // icons have been designed for size 50
     </script>
 
 

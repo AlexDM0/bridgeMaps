@@ -13,7 +13,10 @@
 
 var poiGeoData;
 var geoJsonTrackData;
+var specialTrackData;
 var showLabels = true;
+var focusURL = '';
+var focusID = '';
 
 function drawMap() {
   // create a map in the "map" div, set the view to a given place and zoom
@@ -30,36 +33,66 @@ function drawMap() {
     iconUrl: './images/icons/Map-Marker-Ball-Azure-icon.png',
     iconSize: [markerSize, markerSize],
     iconAnchor: [0.5 * markerSize, markerSize],
-    popupAnchor: [0, -0.5 * markerSize]
+    popupAnchor: [0, -0.5 * markerSize],
+    className: 'passEvent'
   });
 
-  var options = {
+  var GEOJSONoptions = {
     pointToLayer: function (feature, latlng) {
       var icon = feature.properties.icon;
       var iconObj;
-      var iconSize = 50;
-      if (icon && icon != 'null') {
-        iconObj = L.icon({
-          iconUrl: './images/icons/' + feature.properties.icon,
-          iconSize: [iconSize, iconSize],
-          iconAnchor: [0.5 * iconSize, iconSize],
-          popupAnchor: [0, -0.5 * markerSize]
-        });
+      var iconSize = ICON_SIZE;
+      var zIndex = 10000;
+      if (icon && icon != 'null' && !(feature.properties && feature.properties.type === 'targetLocation')) {
+        if (feature.properties && feature.properties.type === 'currentLocation' && feature.properties.minutesRemaining !== undefined) {
+          iconObj = L.icon({
+            iconUrl: './images/icons/' + feature.properties.icon,
+            iconSize: [iconSize, iconSize],
+            iconAnchor: [0.5 * iconSize, iconSize],
+            popupAnchor: [0, -0.5 * iconSize],
+            labelAnchor: [0.5*iconSize-5,-0.5*iconSize]
+          });
+        }
+        else {
+          iconObj = L.icon({
+            iconUrl: './images/icons/' + feature.properties.icon,
+            iconSize: [iconSize, iconSize],
+            iconAnchor: [0.5 * iconSize, iconSize],
+            popupAnchor: [0, -0.5 * markerSize],
+            labelAnchor: [0.5*iconSize-5,-0.5*iconSize],
+            className: 'passEvent'
+          });
+        }
       }
       else {
+        zIndex = 50000;
         iconObj = marker;
       }
-      return L.marker(latlng, {icon: iconObj, zIndexOffset: 10000});
+      return L.marker(latlng, {icon: iconObj, zIndexOffset: zIndex});
     },
     onEachFeature: function (feature, layer) {
-      if (showLabels === true) {
-        if (feature.properties && feature.properties.type === 'currentLocation' && feature.properties.minutesRemaining !== undefined) {
+      if (feature.properties && feature.properties.type === 'currentLocation' && feature.properties.minutesRemaining !== undefined) {
+        if (showLabels === true) {
           var label = feature.id;
           label += " <br>ETA: " + feature.properties.minutesRemaining + ' mins';
           layer.bindLabel(label, {noHide: true}).showLabel();
         }
+        layer.on("click",function() {
+          getSpecialTrackURL(feature.id);
+          getSpecialTrack();
+        })
       }
-    }
+      else if (feature.properties && feature.properties.type === 'currentLocation') {
+        // stop showing path when arrived
+        if (focusID === feature.id) {
+          clearSpecialTrack();
+        }
+      }
+    },
+    opacity: 0.8,
+    color: '#ff0000',
+    weight:8,
+    className:'top'
   }
 
   var POIoptions = {
@@ -91,12 +124,15 @@ function drawMap() {
     }
   }
 
+  map.on('click',function() {clearSpecialTrack();})
 
   poiGeoData = L.geoJson(undefined, POIoptions).addTo(map);
-  geoJsonTrackData = L.geoJson(undefined, options).addTo(map);
+  geoJsonTrackData = L.geoJson(undefined, GEOJSONoptions).addTo(map);
+  specialTrackData = L.geoJson(undefined, GEOJSONoptions).addTo(map);
 
   setSource(DEFAULT_INITIAL_MODE);
 };
+
 
 function getDataPOI() {
   var poiURL;
@@ -111,11 +147,12 @@ function getDataPOI() {
     poiGeoData.clearLayers();
     poiGeoData.addData(data);
     setTimeout(getDataPOI, POI_INTERVAL);
-  },function (error) {
+  },function () {
     document.getElementById('errorSpan').innerHTML = 'Could not connect to datasource for the POI';
     setTimeout(getDataPOI, POI_INTERVAL);
   });
 }
+
 
 
 function getDataGEO() {
@@ -126,16 +163,55 @@ function getDataGEO() {
   else {
     geojsonURL = CLOUD_GEOJSON;
   }
+  // get the focus updated as well.
   loadJSON(geojsonURL, function (data) {
-    document.getElementById('errorSpan').innerHTML = '';
-    geoJsonTrackData.clearLayers();
-    geoJsonTrackData.addData(data);
-    setTimeout(getDataGEO, GEO_INTERVAL);
-  }, function (error) {
+    getSpecialTrack(function() {
+      document.getElementById('errorSpan').innerHTML = '';
+      geoJsonTrackData.clearLayers();
+      geoJsonTrackData.addData(data);
+      setTimeout(getDataGEO, GEO_INTERVAL);
+    });
+  }, function () {
     document.getElementById('errorSpan').innerHTML = 'Could not connect to datasource for the GEOJSON';
     setTimeout(getDataGEO, GEO_INTERVAL);
   });
+}
 
+function getSpecialTrackURL(id) {
+  if (MODE === 'Local') {
+    focusURL = LOCAL_GEOJSON_TRACK_TEMPLATE.replace("$$ID$$",id);
+  }
+  else {
+    focusURL = CLOUD_GEOJSON_TRACK_TEMPLATE.replace("$$ID$$",id);
+  }
+  focusID = id;
+}
+
+function getSpecialTrack(finishedFunction) {
+  if (finishedFunction === undefined) {
+    finishedFunction = function() {};
+  }
+  if (focusURL !== '') {
+    loadJSON(focusURL, function (data) {
+      document.getElementById('errorSpan').innerHTML = '';
+      specialTrackData.clearLayers();
+      specialTrackData.addData(data);
+      finishedFunction();
+    }, function () {
+      document.getElementById('errorSpan').innerHTML = 'Could not connect to datasource for focus';
+      finishedFunction();
+    });
+  }
+  else {
+    finishedFunction();
+  }
+}
+
+
+function clearSpecialTrack() {
+  specialTrackData.clearLayers();
+  focusURL = '';
+  focusID = '';
 }
 
 function loadJSON(path, success, error) {

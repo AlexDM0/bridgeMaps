@@ -1,0 +1,7 @@
+.passEvent {
+    pointer-events: none;
+}
+
+.top {
+    z-index:800000;
+}
