@@ -16,7 +16,7 @@ var geoJsonTrackData;
 
 function drawMap() {
   // create a map in the "map" div, set the view to a given place and zoom
-  var map = L.map('map',{zoomAnimation:false}).setView([43.600344, 1.43194], 13);
+  var map = L.map('map', {zoomAnimation: false}).setView([43.600344, 1.43194], 13);
 
   // add an OpenStreetMap tile layer
   L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {
@@ -29,7 +29,7 @@ function drawMap() {
     iconUrl: './images/icons/Map-Marker-Ball-Azure-icon.png',
     iconSize: [markerSize, markerSize],
     iconAnchor: [0.5 * markerSize, markerSize],
-    popupAnchor: [0,-0.5*markerSize]
+    popupAnchor: [0, -0.5 * markerSize]
   });
 
   var options = {
@@ -37,28 +37,59 @@ function drawMap() {
       var icon = feature.properties.icon;
       var iconObj;
       var iconSize = 50;
-      var z_indexOffset = 10000;
       if (icon && icon != 'null') {
-        iconObj = L.icon({iconUrl: './images/icons/' + feature.properties.icon, iconSize: [iconSize, iconSize], iconAnchor: [0.5*iconSize,iconSize]});
-        z_indexOffset = 0;
+        iconObj = L.icon({
+          iconUrl: './images/icons/' + feature.properties.icon,
+          iconSize: [iconSize, iconSize],
+          iconAnchor: [0.5 * iconSize, iconSize],
+          popupAnchor: [0, -0.5 * markerSize]
+        });
       }
       else {
         iconObj = marker;
       }
-      return L.marker(latlng, {icon: iconObj, zIndexOffset: z_indexOffset});
+      return L.marker(latlng, {icon: iconObj, zIndexOffset: 10000});
     },
-    onEachFeature: function(feature,layer) {
-      if (feature.properties && feature.properties.type === 'currentLocation') {
+    onEachFeature: function (feature, layer) {
+      if (feature.properties && feature.properties.type === 'currentLocation' && feature.properties.minutesRemaining !== undefined) {
         var label = feature.id;
-        if (feature.properties.minutesRemaining !== undefined) {
-          label += " <br>ETA: " + feature.properties.minutesRemaining + ' mins'
-        }
-        layer.bindLabel(label,{noHide:true}).showLabel();
+        label += " <br>ETA: " + feature.properties.minutesRemaining + ' mins';
+        layer.bindLabel(label, {noHide: true}).showLabel();
       }
     }
   }
 
-  poiGeoData = L.geoJson(undefined, options).addTo(map);
+  var POIoptions = {
+    pointToLayer: function (feature, latlng) {
+      var icon = feature.properties.icon;
+      var iconObj;
+      var iconSize = 50;
+      if (icon && icon != 'null') {
+        iconObj = L.icon({
+          iconUrl: './images/icons/' + feature.properties.icon,
+          iconSize: [iconSize, iconSize],
+          iconAnchor: [0.5 * iconSize, iconSize],
+          popupAnchor: [0, -0.5 * markerSize]
+        });
+      }
+      else {
+        iconObj = marker;
+      }
+      return L.marker(latlng, {icon: iconObj, zIndexOffset: 0});
+    },
+    onEachFeature: function (feature, layer) {
+      if (feature && feature.id !== undefined) {
+        var label = feature.id;
+        if (feature.id === "") {
+          label = "no name supplied."
+        }
+        layer.bindPopup(label);
+      }
+    }
+  }
+
+
+  poiGeoData = L.geoJson(undefined, POIoptions).addTo(map);
   geoJsonTrackData = L.geoJson(undefined, options).addTo(map);
 
   setSource(DEFAULT_INITIAL_MODE);
@@ -66,6 +97,7 @@ function drawMap() {
 
 function getDataPOI() {
   var poiURL;
+  console.log('getPOI')
   if (MODE === 'Local') {
     poiURL = LOCAL_POI;
   }
@@ -75,12 +107,14 @@ function getDataPOI() {
   loadJSON(poiURL, function (data) {
     poiGeoData.clearLayers();
     poiGeoData.addData(data);
+    setTimeout(getDataPOI, POI_INTERVAL);
   });
-  setTimeout(getDataPOI, POI_INTERVAL);
+
 }
 
 
 function getDataGEO() {
+  console.log('getGEO')
   var geojsonURL;
   if (MODE === 'Local') {
     geojsonURL = LOCAL_GEOJSON;
@@ -89,15 +123,19 @@ function getDataGEO() {
     geojsonURL = CLOUD_GEOJSON;
   }
   loadJSON(geojsonURL, function (data) {
+    var t0 = new Date().valueOf();
     geoJsonTrackData.clearLayers();
+    var t1 = new Date().valueOf();
     geoJsonTrackData.addData(data);
+    console.log('geo took:', new Date().valueOf() - t0, new Date().valueOf() - t1)
+    setTimeout(getDataGEO, GEO_INTERVAL);
   });
-  setTimeout(getDataGEO, GEO_INTERVAL);
+
 }
 
 function loadJSON(path, success, error) {
   var xhr = new XMLHttpRequest();
-  xhr.onreadystatechange = function() {
+  xhr.onreadystatechange = function () {
     if (xhr.readyState === 4) {
       if (xhr.status === 200) {
         success(JSON.parse(xhr.responseText), path);
