@@ -13,6 +13,7 @@
 
 var poiGeoData;
 var geoJsonTrackData;
+var showLabels = true;
 
 function drawMap() {
   // create a map in the "map" div, set the view to a given place and zoom
@@ -51,10 +52,12 @@ function drawMap() {
       return L.marker(latlng, {icon: iconObj, zIndexOffset: 10000});
     },
     onEachFeature: function (feature, layer) {
-      if (feature.properties && feature.properties.type === 'currentLocation' && feature.properties.minutesRemaining !== undefined) {
-        var label = feature.id;
-        label += " <br>ETA: " + feature.properties.minutesRemaining + ' mins';
-        layer.bindLabel(label, {noHide: true}).showLabel();
+      if (showLabels === true) {
+        if (feature.properties && feature.properties.type === 'currentLocation' && feature.properties.minutesRemaining !== undefined) {
+          var label = feature.id;
+          label += " <br>ETA: " + feature.properties.minutesRemaining + ' mins';
+          layer.bindLabel(label, {noHide: true}).showLabel();
+        }
       }
     }
   }
@@ -108,7 +111,6 @@ function getDataPOI() {
     poiGeoData.addData(data);
     setTimeout(getDataPOI, POI_INTERVAL);
   });
-
 }
 
 
