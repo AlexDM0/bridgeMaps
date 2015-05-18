@@ -1,16 +1,4 @@
-//
-//eve.system.init({
-//  transports: [
-//    {
-//      type: 'http'
-//    }
-//  ]
-//});
-//
-//var proxy = new proxyAgent("proxy");
-//
-//proxy.rpc.request(EVE_ADDRESS, {method:'test',params:{a:1,b:4}}).done(function (reply) {console.log(reply);});
-
+// global vars
 var poiGeoData;
 var geoJsonTrackData;
 var specialTrackData;
@@ -18,6 +6,10 @@ var showLabels = true;
 var focusURL = '';
 var focusID = '';
 
+
+/**
+ * Draw the map, this is done once. The config for how the json is loaded is also in here.
+ */
 function drawMap() {
   // create a map in the "map" div, set the view to a given place and zoom
   var map = L.map('map', {zoomAnimation: false}).setView([43.600344, 1.43194], 13);
@@ -28,6 +20,7 @@ function drawMap() {
   }).addTo(map);
 
 
+  // setup default marker icon
   var marker = L.icon({
     iconUrl: './images/icons/Map-Marker-Ball-Azure-icon.png',
     iconSize: [PIN_SIZE, PIN_SIZE],
@@ -36,39 +29,38 @@ function drawMap() {
     className: 'passEvent'
   });
 
+  // options on how to parse the geojson input
   var GEOJSONoptions = {
     pointToLayer: function (feature, latlng) {
       var icon = feature.properties.icon;
       var iconObj;
-      var zIndex = 10000;
+      var zIndex = 10000; // want this to be high.
       if (icon && icon != 'null' && !(feature.properties && feature.properties.type === 'targetLocation')) {
+        var iconConfig = {
+          iconUrl: './images/icons/' + feature.properties.icon,
+          iconSize: [ICON_SIZE, ICON_SIZE],
+          iconAnchor: [0.5 * ICON_SIZE, ICON_SIZE],
+          popupAnchor: [0, -0.5 * ICON_SIZE],
+          labelAnchor: [0.5*ICON_SIZE-5,-0.5*ICON_SIZE],
+          className: 'passEvent'
+        }
+
+        // if this thing is driving it will get a click event otherwise it has to propagate the event.
         if (feature.properties && feature.properties.type === 'currentLocation' && feature.properties.minutesRemaining !== undefined) {
-          iconObj = L.icon({
-            iconUrl: './images/icons/' + feature.properties.icon,
-            iconSize: [ICON_SIZE, ICON_SIZE],
-            iconAnchor: [0.5 * ICON_SIZE, ICON_SIZE],
-            popupAnchor: [0, -0.5 * ICON_SIZE],
-            labelAnchor: [0.5*ICON_SIZE-5,-0.5*ICON_SIZE]
-          });
+          delete iconConfig.className;
         }
-        else {
-          iconObj = L.icon({
-            iconUrl: './images/icons/' + feature.properties.icon,
-            iconSize: [ICON_SIZE, ICON_SIZE],
-            iconAnchor: [0.5 * ICON_SIZE, ICON_SIZE],
-            popupAnchor: [0, -0.5 * PIN_SIZE],
-            labelAnchor: [0.5*ICON_SIZE-5,-0.5*ICON_SIZE],
-            className: 'passEvent'
-          });
-        }
+
+        iconObj = L.icon(iconConfig);
       }
       else {
+        // markers are over icons.
         zIndex = 50000;
         iconObj = marker;
       }
       return L.marker(latlng, {icon: iconObj, zIndexOffset: zIndex});
     },
     onEachFeature: function (feature, layer) {
+      // bind events, labels and popups to features
       if (feature.properties && feature.properties.type === 'currentLocation' && feature.properties.minutesRemaining !== undefined) {
         if (showLabels === true) {
           var label = feature.id;
@@ -87,12 +79,15 @@ function drawMap() {
         }
       }
     },
+    // options for the path
     opacity: 0.8,
     color: '#ff0000',
     weight:8,
-    className:'top'
+    className:'top' // not really doing anything?
   }
 
+
+  // options on how to load the POI data.
   var POIoptions = {
     pointToLayer: function (feature, latlng) {
       var icon = feature.properties.icon;
@@ -115,6 +110,7 @@ function drawMap() {
       return L.marker(latlng, {icon: iconObj, zIndexOffset: 0});
     },
     onEachFeature: function (feature, layer) {
+      // setup popups
       if (feature && feature.id !== undefined) {
         var label = feature.id;
         if (feature.id === "") {
@@ -125,16 +121,34 @@ function drawMap() {
     }
   }
 
+  // remove track on click anywhere else.
   map.on('click',function() {clearSpecialTrack();})
 
+  // bind empty geoJSON layers to map.
   poiGeoData = L.geoJson(undefined, POIoptions).addTo(map);
   geoJsonTrackData = L.geoJson(undefined, GEOJSONoptions).addTo(map);
   specialTrackData = L.geoJson(undefined, GEOJSONoptions).addTo(map);
 
+  // get the data.
   setSource(DEFAULT_INITIAL_MODE);
 };
 
 
+function setSource(source) {
+  if (source === 'Cloud' || source === 'Local') {
+    MODE = source;
+    document.getElementById('usingSpan').innerHTML = 'Currently using: ' + source;
+    getDataPOI();
+    getDataGEO();
+  }
+  else {
+    console.error("Only allowed source strings are: 'Cloud' and 'Local'");
+  }
+}
+
+/**
+ * get the POI data.
+ */
 function getDataPOI() {
   var poiURL;
   if (MODE === 'Local') {
@@ -155,7 +169,9 @@ function getDataPOI() {
 }
 
 
-
+/**
+ * get the GEOJSON data
+ */
 function getDataGEO() {
   var geojsonURL;
   if (MODE === 'Local') {
@@ -178,6 +194,11 @@ function getDataGEO() {
   });
 }
 
+
+/**
+ * Get the URL for the path visualization, we call this the 'focus'
+ * @param id --> ID of the feature
+ */
 function getSpecialTrackURL(id) {
   if (MODE === 'Local') {
     focusURL = LOCAL_GEOJSON_TRACK_TEMPLATE.replace("$$ID$$",id);
@@ -188,6 +209,11 @@ function getSpecialTrackURL(id) {
   focusID = id;
 }
 
+
+/**
+ * Get the focus track if needed. The finished function is here so we get the same positions for the overlapping cars.
+ * @param finishedFunction
+ */
 function getSpecialTrack(finishedFunction) {
   if (finishedFunction === undefined) {
     finishedFunction = function() {};
@@ -208,13 +234,22 @@ function getSpecialTrack(finishedFunction) {
   }
 }
 
-
+/**
+ * remove focus
+ */
 function clearSpecialTrack() {
   specialTrackData.clearLayers();
   focusURL = '';
   focusID = '';
 }
 
+
+/**
+ * load online json file
+ * @param path  --> URL
+ * @param success --> function
+ * @param error --> function
+ */
 function loadJSON(path, success, error) {
   var xhr = new XMLHttpRequest();
   xhr.onreadystatechange = function () {
@@ -237,14 +272,3 @@ function loadJSON(path, success, error) {
   xhr.send();
 }
 
-function setSource(source) {
-  if (source === 'Cloud' || source === 'Local') {
-    MODE = source;
-    document.getElementById('usingSpan').innerHTML = 'Currently using: ' + source;
-    getDataPOI();
-    getDataGEO();
-  }
-  else {
-    console.error("Only allowed source strings are: Cloud and Local");
-  }
-}
