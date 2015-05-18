@@ -13,6 +13,9 @@
         var LOCAL_GEOJSON = 'http://localhost:8882/rs/geojson';
         var LOCAL_POI = 'http://localhost:8882/rs/poi';
 
+        var POI_INTERVAL = 5000;
+        var GEO_INTERVAL = 1000;
+
         var MODE;
         var DEFAULT_INITIAL_MODE = "Local";
     </script>
@@ -53,8 +56,6 @@
 
 <script>
     drawMap();
-
-    setInterval(getDataGEO,1000);
 </script>
 </body>
 </html>

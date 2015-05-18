@@ -16,7 +16,7 @@ var geoJsonTrackData;
 
 function drawMap() {
   // create a map in the "map" div, set the view to a given place and zoom
-  var map = L.map('map').setView([43.600344, 1.43194], 13);
+  var map = L.map('map',{zoomAnimation:false}).setView([43.600344, 1.43194], 13);
 
   // add an OpenStreetMap tile layer
   L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {
@@ -36,13 +36,16 @@ function drawMap() {
     pointToLayer: function (feature, latlng) {
       var icon = feature.properties.icon;
       var iconObj;
+      var iconSize = 50;
+      var z_indexOffset = 10000;
       if (icon && icon != 'null') {
-        iconObj = L.icon({iconUrl: './images/icons/' + feature.properties.icon, iconSize: [50, 50]});
+        iconObj = L.icon({iconUrl: './images/icons/' + feature.properties.icon, iconSize: [iconSize, iconSize], iconAnchor: [0.5*iconSize,iconSize]});
+        z_indexOffset = 0;
       }
       else {
         iconObj = marker;
       }
-      return L.marker(latlng, {icon: iconObj});
+      return L.marker(latlng, {icon: iconObj, zIndexOffset: z_indexOffset});
     },
     onEachFeature: function(feature,layer) {
       if (feature.properties && feature.properties.type === 'currentLocation') {
@@ -55,12 +58,11 @@ function drawMap() {
     }
   }
 
-
   poiGeoData = L.geoJson(undefined, options).addTo(map);
   geoJsonTrackData = L.geoJson(undefined, options).addTo(map);
 
   setSource(DEFAULT_INITIAL_MODE);
-}
+};
 
 function getDataPOI() {
   var poiURL;
@@ -70,11 +72,15 @@ function getDataPOI() {
   else {
     poiURL = CLOUD_POI;
   }
-  loadJSON(poiURL, function (data) {poiGeoData.clearLayers(); poiGeoData.addData(data);});
+  loadJSON(poiURL, function (data) {
+    poiGeoData.clearLayers();
+    poiGeoData.addData(data);
+  });
+  setTimeout(getDataPOI, POI_INTERVAL);
 }
 
+
 function getDataGEO() {
-  console.trace("here")
   var geojsonURL;
   if (MODE === 'Local') {
     geojsonURL = LOCAL_GEOJSON;
@@ -82,7 +88,11 @@ function getDataGEO() {
   else {
     geojsonURL = CLOUD_GEOJSON;
   }
-  loadJSON(geojsonURL, function (data) {geoJsonTrackData.clearLayers(); geoJsonTrackData.addData(data);});
+  loadJSON(geojsonURL, function (data) {
+    geoJsonTrackData.clearLayers();
+    geoJsonTrackData.addData(data);
+  });
+  setTimeout(getDataGEO, GEO_INTERVAL);
 }
 
 function loadJSON(path, success, error) {
