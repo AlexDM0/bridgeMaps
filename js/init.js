@@ -123,11 +123,8 @@ function getDataGEO() {
     geojsonURL = CLOUD_GEOJSON;
   }
   loadJSON(geojsonURL, function (data) {
-    var t0 = new Date().valueOf();
     geoJsonTrackData.clearLayers();
-    var t1 = new Date().valueOf();
     geoJsonTrackData.addData(data);
-    console.log('geo took:', new Date().valueOf() - t0, new Date().valueOf() - t1)
     setTimeout(getDataGEO, GEO_INTERVAL);
   });
 
