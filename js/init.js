@@ -97,7 +97,6 @@ function drawMap() {
 
 function getDataPOI() {
   var poiURL;
-  console.log('getPOI')
   if (MODE === 'Local') {
     poiURL = LOCAL_POI;
   }
@@ -114,7 +113,6 @@ function getDataPOI() {
 
 
 function getDataGEO() {
-  console.log('getGEO')
   var geojsonURL;
   if (MODE === 'Local') {
     geojsonURL = LOCAL_GEOJSON;
