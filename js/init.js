@@ -107,6 +107,7 @@ function getDataPOI() {
     poiURL = CLOUD_POI;
   }
   loadJSON(poiURL, function (data) {
+    document.getElementById('errorSpan').innerHTML = '';
     poiGeoData.clearLayers();
     poiGeoData.addData(data);
     setTimeout(getDataPOI, POI_INTERVAL);
@@ -126,6 +127,7 @@ function getDataGEO() {
     geojsonURL = CLOUD_GEOJSON;
   }
   loadJSON(geojsonURL, function (data) {
+    document.getElementById('errorSpan').innerHTML = '';
     geoJsonTrackData.clearLayers();
     geoJsonTrackData.addData(data);
     setTimeout(getDataGEO, GEO_INTERVAL);
