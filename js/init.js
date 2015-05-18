@@ -28,12 +28,11 @@ function drawMap() {
   }).addTo(map);
 
 
-  var markerSize = 40;
   var marker = L.icon({
     iconUrl: './images/icons/Map-Marker-Ball-Azure-icon.png',
-    iconSize: [markerSize, markerSize],
-    iconAnchor: [0.5 * markerSize, markerSize],
-    popupAnchor: [0, -0.5 * markerSize],
+    iconSize: [PIN_SIZE, PIN_SIZE],
+    iconAnchor: [0.5 * PIN_SIZE, PIN_SIZE],
+    popupAnchor: [0, -0.5 * PIN_SIZE],
     className: 'passEvent'
   });
 
@@ -57,7 +56,7 @@ function drawMap() {
             iconUrl: './images/icons/' + feature.properties.icon,
             iconSize: [ICON_SIZE, ICON_SIZE],
             iconAnchor: [0.5 * ICON_SIZE, ICON_SIZE],
-            popupAnchor: [0, -0.5 * markerSize],
+            popupAnchor: [0, -0.5 * PIN_SIZE],
             labelAnchor: [0.5*ICON_SIZE-5,-0.5*ICON_SIZE],
             className: 'passEvent'
           });
@@ -98,12 +97,16 @@ function drawMap() {
     pointToLayer: function (feature, latlng) {
       var icon = feature.properties.icon;
       var iconObj;
+      var iconSize = ICON_SIZE_POI;
       if (icon && icon != 'null') {
+        if (feature.properties.icon === 'firedpt_building.png' || feature.properties.icon === 'hospital_building.png' || feature.properties.icon === 'police_building.png') {
+          iconSize = ICON_SIZE_POI_ALMENDE;
+        }
         iconObj = L.icon({
           iconUrl: './images/icons/' + feature.properties.icon,
-          iconSize: [ICON_SIZE_POI, ICON_SIZE_POI],
-          iconAnchor: [0.5 * ICON_SIZE_POI, ICON_SIZE_POI],
-          popupAnchor: [0, -0.5 * ICON_SIZE_POI]
+          iconSize: [iconSize, iconSize],
+          iconAnchor: [0.5 * iconSize, iconSize],
+          popupAnchor: [0, -0.5 * iconSize]
         });
       }
       else {
