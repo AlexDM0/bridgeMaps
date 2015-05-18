@@ -110,6 +110,9 @@ function getDataPOI() {
     poiGeoData.clearLayers();
     poiGeoData.addData(data);
     setTimeout(getDataPOI, POI_INTERVAL);
+  },function (error) {
+    document.getElementById('errorSpan').innerHTML = 'Could not connect to datasource for the POI';
+    setTimeout(getDataPOI, POI_INTERVAL);
   });
 }
 
@@ -125,6 +128,9 @@ function getDataGEO() {
   loadJSON(geojsonURL, function (data) {
     geoJsonTrackData.clearLayers();
     geoJsonTrackData.addData(data);
+    setTimeout(getDataGEO, GEO_INTERVAL);
+  }, function (error) {
+    document.getElementById('errorSpan').innerHTML = 'Could not connect to datasource for the GEOJSON';
     setTimeout(getDataGEO, GEO_INTERVAL);
   });
 

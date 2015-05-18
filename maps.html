@@ -6,9 +6,7 @@
 
     <!--setup parameters-->
     <script language="JavaScript">
-        var EVE_ADDRESS = 'http://52.28.91.207:8882/agents/proxy/';
-
-        var CLOUD_GEOJSON = 'http://52.28.91.207:8882/rs/geojson?includeTarget=false';
+        var CLOUD_GEOJSON = 'http://52.d28.91.207:8882/rs/geojson?includeTarget=false';
         var CLOUD_POI = 'http://52.28.91.207:8882/rs/poi';
         var LOCAL_GEOJSON = 'http://localhost:8882/rs/geojson';
         var LOCAL_POI = 'http://localhost:8882/rs/poi';
@@ -45,15 +43,25 @@
             width: 1200px;
             height: 800px;
         }
+        #errorSpan {
+            color:red;
+            font-size:15px;
+        }
+        #configuration {
+            display:block;
+        }
     </style>
 </head>
 <body>
-<input type="button" value="Cloud" onclick="setSource('Cloud')">
-<input type="button" value="Local" onclick="setSource('Local')">
-<span id="usingSpan"></span>
+<div id="configuration">
+    <input type="button" value="Cloud" onclick="setSource('Cloud')">
+    <input type="button" value="Local" onclick="setSource('Local')">
+    <span id="usingSpan"></span>
+</div>
 <div>
     Show labels: <input type="checkbox" checked="checked" onchange="showLabels = this.checked;">
 </div>
+<span id="errorSpan"></span>
 <div id="map"></div>
 
 <script>
