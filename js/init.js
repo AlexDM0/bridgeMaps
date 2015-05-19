@@ -43,7 +43,7 @@ function drawMap() {
           iconSize: [ICON_SIZE, ICON_SIZE],
           iconAnchor: [0.5 * ICON_SIZE, ICON_SIZE],
           popupAnchor: [0, -0.5 * ICON_SIZE],
-          labelAnchor: [0.5*ICON_SIZE-5,-0.5*ICON_SIZE],
+          labelAnchor: [0.5*ICON_SIZE-5,-0.5*ICON_SIZE]
           //className: 'passEvent'
         }
 
@@ -137,6 +137,7 @@ function drawMap() {
         });
       }
       else {
+        console.log('poi', feature.id, feature.properties.icon, feature.properties.type)
         iconObj = marker;
       }
       return L.marker(latlng, {icon: iconObj, zIndexOffset: 0});
