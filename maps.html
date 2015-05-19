@@ -8,7 +8,7 @@
     <script language="JavaScript">
 
         // URLs used to get the data
-        var CLOUD_GEOJSON_TRACK_TEMPLATE = 'http://52.28.91.207:8882/rs/geojson/$$ID$$?includeTrack=true';
+        var CLOUD_GEOJSON_TRACK_TEMPLATE = 'http://52.28.91.207:8882/rs/geojson/$$ID$$?includeTrack=true&includeCurrent=false';
         var CLOUD_GEOJSON = 'http://52.28.91.207:8882/rs/geojson?includeTarget=false';
         var CLOUD_POI = 'http://52.28.91.207:8882/rs/poi';
         var LOCAL_GEOJSON_TRACK_TEMPLATE = 'http://localhost:8882/rs/geojson/$$ID$$?includeTrack=true';
@@ -16,7 +16,7 @@
         var LOCAL_POI = 'http://localhost:8882/rs/poi';
 
         // polling intervals in ms
-        var POI_INTERVAL = 8000;
+        var POI_INTERVAL = 5000;
         var GEO_INTERVAL = 1000;
 
         // local or cloud, local is for development
@@ -76,6 +76,10 @@
             background-color:#ffffff;
             border-radius:5px;
             z-index:10000000;
+        }
+
+        .leaflet-popup {
+            transition: none !important;
         }
     </style>
 </head>

@@ -5,6 +5,8 @@ var specialTrackData;
 var showLabels = true;
 var focusURL = '';
 var focusID = '';
+var globalPopup = undefined;
+var POIglobalPopup = undefined;;
 
 
 /**
@@ -42,13 +44,13 @@ function drawMap() {
           iconAnchor: [0.5 * ICON_SIZE, ICON_SIZE],
           popupAnchor: [0, -0.5 * ICON_SIZE],
           labelAnchor: [0.5*ICON_SIZE-5,-0.5*ICON_SIZE],
-          className: 'passEvent'
+          //className: 'passEvent'
         }
 
         // if this thing is driving it will get a click event otherwise it has to propagate the event.
-        if (feature.properties && feature.properties.type === 'currentLocation' && feature.properties.minutesRemaining !== undefined) {
-          delete iconConfig.className;
-        }
+        //if (feature.properties && feature.properties.type === 'currentLocation' && feature.properties.minutesRemaining !== undefined) {
+        //  delete iconConfig.className;
+        //}
 
         iconObj = L.icon(iconConfig);
       }
@@ -61,13 +63,18 @@ function drawMap() {
     },
     onEachFeature: function (feature, layer) {
       // bind events, labels and popups to features
+      var etaLabel = undefined;
       if (feature.properties && feature.properties.type === 'currentLocation' && feature.properties.minutesRemaining !== undefined) {
         if (showLabels === true) {
-          var label = feature.id;
-          label += " <br>ETA: " + feature.properties.minutesRemaining + ' mins';
-          layer.bindLabel(label, {noHide: true}).showLabel();
+          etaLabel = " <br>ETA: " + feature.properties.minutesRemaining + ' mins';
+          if (focusID !== feature.id) {
+            layer.bindLabel(feature.id + etaLabel, {noHide: true});
+          }
         }
+
+        // there can be multiple click events on a single item.
         layer.on("click",function() {
+          focusID = feature.id;
           getSpecialTrackURL(feature.id);
           getSpecialTrack();
         })
@@ -78,6 +85,32 @@ function drawMap() {
           clearSpecialTrack();
         }
       }
+
+      // popup is combined of multiple stages, the label is not shown when the popup is to clean the gui.
+      var popupLabel = 'id:' + feature.id;
+      if (feature.properties && feature.properties.taskTitle) {
+        popupLabel += "<br />title:" + feature.properties.taskTitle;
+      }
+      if (feature.properties && feature.properties.taskStep) {
+        popupLabel += "<br />step:" + feature.properties.taskStep;
+      }
+      if (etaLabel) {
+        popupLabel += "<br />" + etaLabel;
+      }
+
+      // if the feature is selected, we set the globalPopup because we cannot open the popup here. It also makes it persistent.
+      if (focusID === feature.id) {
+        globalPopup = layer.bindPopup(popupLabel, {closeButton:false});
+      }
+      else {
+        layer.bindPopup(popupLabel, {closeButton:false});
+      }
+
+      // set the focusID and hide the label.
+      layer.on("click",function() {
+        focusID = feature.id;
+        layer.hideLabel();
+      });
     },
     // options for the path
     opacity: 0.8,
@@ -85,7 +118,6 @@ function drawMap() {
     weight:8,
     className:'top' // not really doing anything?
   }
-
 
   // options on how to load the POI data.
   var POIoptions = {
@@ -116,13 +148,27 @@ function drawMap() {
         if (feature.id === "") {
           label = "no name supplied."
         }
-        layer.bindPopup(label);
+
+        // this is for persistent popups over refreshes.
+        if (feature.id === "" || feature.id !== focusID) {
+          layer.bindPopup(label);
+        }
+        else {
+          POIglobalPopup = layer.bindPopup(label);
+        }
+
+        // we require and ID for this.
+        if (feature.id !== "") {
+          layer.on('click', function () {
+            focusID = feature.id;
+          })
+        }
       }
     }
   }
 
   // remove track on click anywhere else.
-  map.on('click',function() {clearSpecialTrack();})
+  map.on('click',function() {clearSpecialTrack(); globalPopup = undefined; POIglobalPopup = undefined; focusID = '';});
 
   // bind empty geoJSON layers to map.
   poiGeoData = L.geoJson(undefined, POIoptions).addTo(map);
@@ -161,6 +207,9 @@ function getDataPOI() {
     document.getElementById('errorSpan').innerHTML = '';
     poiGeoData.clearLayers();
     poiGeoData.addData(data);
+    if (POIglobalPopup) {
+      POIglobalPopup.openPopup();
+    }
     setTimeout(getDataPOI, POI_INTERVAL);
   },function () {
     document.getElementById('errorSpan').innerHTML = 'Could not connect to datasource for the POI';
@@ -186,6 +235,9 @@ function getDataGEO() {
       document.getElementById('errorSpan').innerHTML = '';
       geoJsonTrackData.clearLayers();
       geoJsonTrackData.addData(data);
+      if (globalPopup) {
+        globalPopup.openPopup();
+      }
       setTimeout(getDataGEO, GEO_INTERVAL);
     });
   }, function () {
@@ -206,7 +258,6 @@ function getSpecialTrackURL(id) {
   else {
     focusURL = CLOUD_GEOJSON_TRACK_TEMPLATE.replace("$$ID$$",id);
   }
-  focusID = id;
 }
 
 
@@ -240,7 +291,6 @@ function getSpecialTrack(finishedFunction) {
 function clearSpecialTrack() {
   specialTrackData.clearLayers();
   focusURL = '';
-  focusID = '';
 }
 
 
